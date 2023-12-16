@@ -1,3 +1,9 @@
-pool: MyAgentPool
+pool:
+    vmImage:ubuntu-latest
+
+variables:
+    buildConfiguration: 'Release'
+
+name: Testing
 steps:
 - bash: echo hello world
