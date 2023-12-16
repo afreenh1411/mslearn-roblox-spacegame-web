@@ -1,6 +1,9 @@
-pool:
-    vmImage:ubuntu-latest
+trigger:
+- main
 
+pool:
+    vmImage: ubuntu-latest
+    
 variables:
     buildConfiguration: 'Release'
 
