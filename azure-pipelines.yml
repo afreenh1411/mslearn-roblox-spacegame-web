@@ -26,8 +26,8 @@ steps:
 - script: './node_modules/.bin/node-sass Tailspin.SpaceGame.Web/wwwroot --output Tailspin.SpaceGame.Web/wwwroot'
   displayName: 'Compile SASS to CSS'
 
--task: gulp@1
- displayName: 'Minify CSS and JS'
+- task: gulp@1
+  displayName: 'Minify CSS and JS'
 
 - script: 'echo "$(Build.DefinitionName), $(Build.BuildId), $(Build.BuildNumber)" > buildinfo.txt'
   displayName: 'Write build info'
