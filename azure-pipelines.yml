@@ -6,6 +6,8 @@ pool:
     
 variables:
     buildConfiguration: 'Release'
+    dotNetSdkVersion: '6.x'
+    wwwRootDir: 'Tailspin.SpaceGame.Web/wwwroot'
 
 name: Testing
 
@@ -16,14 +18,14 @@ steps:
   displayName: 'Install .NET SDK 6'
   inputs:
     packageType: sdk
-    version: '6.x'
+    version: '$(dotNetSdkVersion)'
 
 - task: Npm@1
   displayName: 'Run npm install'
   inputs:
     verbose: false
 
-- script: './node_modules/.bin/node-sass Tailspin.SpaceGame.Web/wwwroot --output Tailspin.SpaceGame.Web/wwwroot'
+- script: './node_modules/.bin/node-sass $(wwwRootDir) --output $(wwwRootDir)' #'./node_modules/.bin/node-sass Tailspin.SpaceGame.Web/wwwroot --output Tailspin.SpaceGame.Web/wwwroot'
   displayName: 'Compile SASS to CSS'
 
 - task: gulp@1
@@ -31,7 +33,7 @@ steps:
 
 - script: 'echo "$(Build.DefinitionName), $(Build.BuildId), $(Build.BuildNumber)" > buildinfo.txt'
   displayName: 'Write build info'
-  workingDirectory: Tailspin.SpaceGame.Web/wwwroot 
+  workingDirectory: $(wwwRootDir) 
 
 - task: DotNetCoreCLI@2
   displayName: 'Restore dependencies'
@@ -43,5 +45,20 @@ steps:
   displayName: 'Build'
   inputs:
     command: 'build'
-    arguments: '--no-restore --configuration Release'
+    arguments: '--no-restore --configuration $(buildConfiguration)'
     projects: '**/*.csproj'
+
+# Publish the result to the pipeline
+
+- task: DotNetCoreCLI@2
+  displayName: 'Publish'
+  inputs: 
+    command: 'publish'
+    arguments: '--no-build --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/$(buildConfiguration)'
+    publishWebProjects: false
+    projects: '**/*.csproj'
+    zipAfterPublish: true
+    
+ - task: PublishBuildArtifacts@1
+   displayName: 'Publish Artifact: drop'
+   condition: succeeded()
