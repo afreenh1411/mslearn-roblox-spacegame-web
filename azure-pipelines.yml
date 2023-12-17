@@ -1,12 +1,73 @@
 trigger:
-- main
+- '*'
 
 pool:
     vmImage: ubuntu-latest
     
 variables:
     buildConfiguration: 'Release'
+    dotNetSdkVersion: '6.x'
+    wwwRootDir: 'Tailspin.SpaceGame.Web/wwwroot'
 
 name: Testing
+
 steps:
 - bash: echo hello world
+
+- task: UseDotNet@2
+  displayName: 'Install .NET SDK 6'
+  inputs:
+    packageType: sdk
+    version: '$(dotNetSdkVersion)'
+
+- task: Npm@1
+  displayName: 'Run npm install'
+  inputs:
+    verbose: false
+
+- script: './node_modules/.bin/node-sass $(wwwRootDir) --output $(wwwRootDir)' #'./node_modules/.bin/node-sass Tailspin.SpaceGame.Web/wwwroot --output Tailspin.SpaceGame.Web/wwwroot'
+  displayName: 'Compile SASS to CSS'
+
+- task: gulp@1
+  displayName: 'Minify CSS and JS'
+
+- script: 'echo "$(Build.DefinitionName), $(Build.BuildId), $(Build.BuildNumber)" > buildinfo.txt'
+  displayName: 'Write build info'
+  workingDirectory: $(wwwRootDir) 
+
+- task: DotNetCoreCLI@2
+  displayName: 'Restore dependencies'
+  inputs:
+    command: 'restore'
+    projects: '**/*.csproj'
+
+#Original steps. We will now use templates for Build, Publish tasks
+# - task: DotNetCoreCLI@2
+#   displayName: 'Build'
+#   inputs:
+#     command: 'build'
+#     arguments: '--no-restore --configuration $(buildConfiguration)'
+#     projects: '**/*.csproj'
+
+# # Publish the result to the pipeline
+
+# - task: DotNetCoreCLI@2
+#   displayName: 'Publish'
+#   inputs: 
+#     command: 'publish'
+#     arguments: '--no-build --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/$(buildConfiguration)'
+#     publishWebProjects: false
+#     projects: '**/*.csproj'
+#     zipAfterPublish: true
+
+- template: 'templates/build.yml'
+    parameters:
+        buildConfiguration: 'Debug'
+
+- template: 'templates/build.yml'
+    parameters:
+        buildConfiguration: 'Release'
+    
+ - task: PublishBuildArtifacts@1
+   displayName: 'Publish Artifact: drop'
+   condition: succeeded()
