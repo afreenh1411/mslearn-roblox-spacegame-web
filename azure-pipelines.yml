@@ -54,7 +54,7 @@ steps:
 
 # Add tasks to perform code coverage testing
 - task: DotNetCoreCLI@2
-  displayName: 'Install .NET tools from local manifest''
+  displayName: 'Install .NET tools from local manifest'
   inputs:
     command: custom
     custom: tool
@@ -62,14 +62,14 @@ steps:
     #projects: '**/*.Tests.csproj'
 
 - task: DotNetCoreCLI@2
-  displayName: 'Install .NET tools from local manifest''
+  displayName: 'Install .NET tools from local manifest'
   inputs:
     command: 'test'    
     arguments: '--no-build --configuration $(buildConfiguration) /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=$(Build.SourcesDirectory)/TestResults/Coverage/'
     publishTestResults: true
     projects: '**/*.Tests.csproj'
 
-  - task: DotNetCoreCLI@2
+- task: DotNetCoreCLI@2
   displayName: 'Create code coverage report'
   inputs:
     command: custom
