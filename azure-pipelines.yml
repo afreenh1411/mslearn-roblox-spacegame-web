@@ -36,6 +36,15 @@ steps:
   displayName: 'Write build info'
   workingDirectory: $(wwwrootDir)
 
+# Reference the package, that got in the Azure Artifacts
+- task: NuGetCommand@2
+  displayName: 'Restore project dependencies'
+  inputs:
+    command: 'restore'
+    restoreSolution: '**/*.sln'
+    feedsToUse: 'select'
+    vstsFeed: '$(System.TeamProject)/Tailspin.SpaceGame.Web.Models'
+
 - task: DotNetCoreCLI@2
   displayName: 'Build the project - $(buildConfiguration)'
   inputs:
@@ -53,5 +62,5 @@ steps:
     zipAfterPublish: true
 
 - task: PublishBuildArtifacts@1
-  displayName: 'Publish Artifact: drop'
+  displayName: 'Publish Artifact: drop'S
   condition: succeeded()
