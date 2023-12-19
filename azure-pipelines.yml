@@ -108,11 +108,12 @@ stages:
     displayName: 'Deploy the web application to dev'
     dependsOn: 'Build'
     condition: |
+      and
       (
         succeeded(), 
        eq(variables['Build.SourceBranchName'], variables['releaseBranchName'])
       )
-      
+
     jobs:
     # -job: 'echo'
     #   steps:
