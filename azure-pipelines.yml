@@ -94,8 +94,8 @@ stages:
         displayName: 'Publish the project - $(buildConfiguration)'
         inputs:
           command: 'publish'
-          projects: '|  **/*.csproj !**/*Tests.csproj'
-          publishWebProjects: false
+          projects: ' **/*.csproj' #|  **/*.csproj !**/*Tests.csproj'
+          publishWebProjects: true #false
           arguments: '--no-build --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/$(buildConfiguration)'
           zipAfterPublish: true
 
@@ -125,4 +125,4 @@ stages:
               inputs:
                 azureSubscription: 'Resource Manager - Roblox - Space Game'
                 appName: '$(WebAppName)'
-                package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/*.zip'  
+                package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/*.zip'
