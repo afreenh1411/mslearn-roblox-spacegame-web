@@ -147,7 +147,7 @@ stages:
                 package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/*.zip'
 
 
-- stage: 'QA'
+  - stage: 'QA'
     displayName: 'Deploy the web application to qa'
     dependsOn: 'DeployDev'
     condition: eq(variables['Build.Reason'], 'Schedule' )
