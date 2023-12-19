@@ -112,9 +112,9 @@ stages:
         succeeded(), eq(variables['Build.SourceBranchName'], variables['releaseBranchName'])
       )
     jobs:
-    -job: 'echo'
-      steps:
-      - script: 'echo "$(environment.Name)" > env.txt'
+    # -job: 'echo'
+    #   steps:
+    #   - script: 'echo "$(environment.Name)" > env.txt'
 
     - deployment: Deploy
       pool:
