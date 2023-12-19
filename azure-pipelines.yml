@@ -106,6 +106,10 @@ stages:
   - stage: 'Deploy'
     displayName: 'Deploy the web application'
     jobs:
+    -job: 'echo'
+      steps:
+      - script: 'echo "$(environment-name)" > env.txt'
+
     - deployment: Deploy
       pool:
         vmImage: 'ubuntu-20.04'
