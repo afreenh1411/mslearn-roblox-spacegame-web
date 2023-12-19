@@ -5,6 +5,15 @@ variables:
   buildConfiguration: 'Release'
   releaseBranchName: 'release-pipeline'
 
+Schedules:
+- cron: '10 0 * * *'
+  displayName: 'Deploy every day at  10 minutes.'
+  branches:
+    include:
+    - release-pipeline
+  always: false 
+
+
 stages:
   - stage: 'Build'
     displayName: 'Build the web application'
@@ -104,6 +113,7 @@ stages:
         displayName: 'Publish Artifact: drop'
         condition: succeeded()
 
+  # Adding Dev stage
   - stage: 'DeployDev'
     displayName: 'Deploy the web application to dev'
     dependsOn: 'Build'
@@ -115,10 +125,6 @@ stages:
       )
 
     jobs:
-    # -job: 'echo'
-    #   steps:
-    #   - script: 'echo "$(environment.Name)" > env.txt'
-
     - deployment: Deploy
       pool:
         vmImage: 'ubuntu-20.04'
@@ -138,4 +144,32 @@ stages:
               inputs:
                 azureSubscription: 'Resource Manager - Roblox - Space Game'
                 appName: '$(WebAppNameDev)' # This is variable name created in the library under 3,variable group 'Relaese'
+                package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/*.zip'
+
+
+- stage: 'QA'
+    displayName: 'Deploy the web application to qa'
+    dependsOn: 'DeployDev'
+    condition: eq(variables['Build.Reason'], 'Schedule' )
+
+    jobs:
+    - deployment: Deploy
+      pool:
+        vmImage: 'ubuntu-20.04'
+
+      environment: qa
+      variables:
+      - group: Release 
+      
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+            - download: current
+              artifact: drop
+            - task: AzureWebApp@1
+              displayName: 'Azure App service Deploy: website'
+              inputs:
+                azureSubscription: 'Resource Manager - Roblox - Space Game'
+                appName: '$(WebAppNameQa)' # This is variable name created in the library under 3,variable group 'Relaese'
                 package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/*.zip'
