@@ -1,6 +1,11 @@
 trigger:
 - '*'
 
+# trigger: none # will disable CI builds entirely
+# trigger: # List of branches that trigger a run.
+# - main
+# - develop
+
 variables:
   buildConfiguration: 'Release'
   releaseBranchName: 'release-pipeline'
@@ -13,7 +18,7 @@ schedules:
     - release-pipeline
   always: false 
 
-
+# Build Stage
 stages:
   - stage: 'Build'
     displayName: 'Build the web application'
@@ -113,7 +118,7 @@ stages:
         displayName: 'Publish Artifact: drop'
         condition: succeeded()
 
-  # Adding Dev stage
+# Adding Dev stage
   - stage: 'DeployDev'
     displayName: 'Deploy the web application to dev'
     dependsOn: 'Build'
@@ -146,11 +151,11 @@ stages:
                 appName: '$(WebAppNameDev)' # This is variable name created in the library under 3,variable group 'Relaese'
                 package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/*.zip'
 
-
+# Adding QA stage
   - stage: 'QA'
     displayName: 'Deploy the web application to qa'
     dependsOn: 'DeployDev'
-    condition: eq(variables['Build.Reason'], 'Schedule' )
+    condition:  eq(variables['Build.Reason'], 'Manual' ) #eq(variables['Build.Reason'], 'Schedule' )
 
     jobs:
     - deployment: Deploy
@@ -173,3 +178,59 @@ stages:
                 azureSubscription: 'Resource Manager - Roblox - Space Game'
                 appName: '$(WebAppNameQa)' # This is variable name created in the library under 3,variable group 'Relaese'
                 package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/*.zip'
+
+# Build promote to staging only if approver gives approval. 
+# Secondly, we will set approval mechanism in the environments -> staging -> Approvals -> add users -> Create
+  - stage: 'Staging'
+    displayName: 'Deploy the web application to staging'
+    dependsOn: 'QA'
+    #condition: eq(variables['Build.Reason'], 'Schedule' )
+
+    jobs:
+    - deployment: Deploy
+      pool:
+        vmImage: 'ubuntu-20.04'
+
+      environment: staging
+      variables:
+      - group: Release 
+      
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+            - download: current
+              artifact: drop
+            - task: AzureWebApp@1
+              displayName: 'Azure App service Deploy: website'
+              inputs:
+                azureSubscription: 'Resource Manager - Roblox - Space Game'
+                appName: '$(WebAppNameStaging)' # This is variable name created in the library under 3,variable group 'Relaese'
+                package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/*.zip'
+
+  - stage: 'Production'
+    displayName: 'Deploy the web application to production'
+    dependsOn: 'Staging'
+    #condition: eq(variables['Build.Reason'], 'Schedule' )
+
+    jobs:
+    - deployment: Deploy
+      pool:
+        vmImage: 'ubuntu-20.04'
+
+      environment: prod
+      variables:
+      - group: Release 
+      
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+            - download: current
+              artifact: drop
+            - task: AzureWebApp@1
+              displayName: 'Azure App service Deploy: website'
+              inputs:
+                azureSubscription: 'Resource Manager - Roblox - Space Game'
+                appName: '$(WebAppName)' # This is variable name created in the library under 3,variable group 'Relaese'
+                package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/*.zip'                
